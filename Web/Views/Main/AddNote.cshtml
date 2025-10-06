@@ -1,0 +1,22 @@
+﻿<a href="/">&larr; Back</a>
+<br /><br />
+
+<div class="page-header">
+    <span class="icon-quill"></span>
+    Write a note
+</div>
+
+<div class="editor-wrapper">
+    <div class="editor-title-grid">
+        <input type="text" id="commentInput" placeholder="Comment..." tabindex="1" />
+        <button class="button-good" id="addButton" disabled tabindex="3">
+            <span class="icon-cogs"></span>
+            Add to queue
+        </button>
+    </div>
+    <textarea id="contentInput" placeholder="Enter some contents..." tabindex="2"></textarea>
+</div>
+
+@section Scripts {
+    <script type="module" src="~/js/addNote.js"></script>
+}

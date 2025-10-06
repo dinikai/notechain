@@ -1,4 +1,8 @@
+using Web;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton<BlockChainService>();
 
 builder.Services.AddControllersWithViews();
 
@@ -8,6 +12,6 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
+app.MapControllers();
 
 app.Run();

@@ -1,0 +1,32 @@
+﻿@model Web.Models.ViewNoteModel
+
+<a href="/">&larr; Back</a>
+<br /><br />
+
+<div class="note-wrapper">
+    <div>
+        <div class="note-comment">@Model.Block.Comment</div>
+        <div class="note-top-info">
+            <span>@Model.Block.Timestamp.ToString("g")</span>
+            <span class="note-info-entry accent">@Model.Block.Id</span>
+        </div>
+        <hr />
+    </div>
+    <div class="note-content">@Model.Block.TextData</div>
+    <div>
+        <hr />
+        <div class="note-info">
+            <div>Hash:</div>
+            <span class="note-info-entry">@BitConverter.ToString(Model.Block.Hash).Replace("-", "").ToLower()</span>
+
+            @if (Model.Block.Previous != null)
+            {
+                <div>Prev. hash:</div>
+                <div class="note-info-entry">@BitConverter.ToString(Model.Block.Previous.Hash).Replace("-", "").ToLower()</div>
+            }
+
+            <div>Nonce:</div>
+            <div class="note-info-entry">@Model.Block.Nonce</div>
+        </div>
+    </div>
+</div>

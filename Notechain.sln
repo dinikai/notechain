@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notechain", "Notechain\Notechain.csproj", "{ADE50201-9EFB-46BA-A654-D2CACE0AB84B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web", "Web\Web.csproj", "{B11F0CE4-D3F6-4C4B-BFC1-43BF6501754F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{ADE50201-9EFB-46BA-A654-D2CACE0AB84B} = {ADE50201-9EFB-46BA-A654-D2CACE0AB84B}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

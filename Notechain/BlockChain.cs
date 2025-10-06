@@ -4,9 +4,9 @@ using System.Text;
 namespace Notechain
 {
     /// <summary>
-    /// Represents block chain.
+    /// Represents the block chain.
     /// </summary>
-    internal class BlockChain : IEnumerable<Block>
+    public class BlockChain : IEnumerable<Block>
     {
         /// <summary>
         /// Fixed file header length.
@@ -26,7 +26,7 @@ namespace Notechain
         /// <summary>
         /// Gets verification state of this chain.
         /// </summary>
-        public bool IsVerified => blocks.All(b => b.CheckForValidity());
+        public bool IsVerified => blocks.All(b => b.IsValid);
 
         /// <summary>
         /// Gets block from the chain by ID.
@@ -67,8 +67,8 @@ namespace Notechain
         /// Reads chain header and all blocks from stream.
         /// </summary>
         /// <param name="stream">Stream to read from.</param>
-        /// <returns>Read block chain.</returns>
-        public static BlockChain FromStream(Stream stream)
+        /// <returns></returns>
+        public static BlockChain? FromStream(Stream stream)
         {
             int bytesRead = 0;
 
@@ -76,6 +76,9 @@ namespace Notechain
             byte[] buffer = new byte[4];
             bytesRead += stream.Read(buffer);
             int blockNumber = BitConverter.ToInt32(buffer);
+
+            if (bytesRead == 0)
+                return null;
 
             buffer = new byte[4];
             bytesRead += stream.Read(buffer);
@@ -86,7 +89,7 @@ namespace Notechain
             string title = Encoding.UTF8.GetString(buffer);
 
             // Read remaining zeros
-            stream.Read(new byte[256], 0, HeaderLength - bytesRead);
+            stream.Read(new byte[HeaderLength], 0, HeaderLength - bytesRead);
 
             // Read all blocks
             var blocks = new List<Block>();
@@ -126,48 +129,10 @@ namespace Notechain
 
             while (queuedBlocks.TryDequeue(out var block))
             {
-                WriteBlockToStream(stream, block);
+                block.WriteBlockToStream(stream);
             }
-        }
 
-        /// <summary>
-        /// Writes binary-serialized block data to <paramref name="stream"/>
-        /// </summary>
-        /// <param name="stream">Stream to write.</param>
-        private static void WriteBlockToStream(Stream stream, Block block)
-        {
-            // ID
-            stream.Write(block.Id.ToByteArray());
-
-            // Height
-            stream.Write(BitConverter.GetBytes(block.Height));
-
-            // Hash
-            stream.Write(block.Hash);
-
-            // Previous hash
-            byte[] previousHash = Enumerable.Repeat<byte>(0, 32).ToArray();
-            if (block.Previous != null)
-                previousHash = block.Previous.Hash;
-            stream.Write(previousHash);
-
-            // Timestamp
-            stream.Write(BitConverter.GetBytes(block.Timestamp.ToBinary()));
-
-            // Nonce
-            stream.Write(BitConverter.GetBytes(block.Nonce));
-
-            // Comment length
-            stream.Write(BitConverter.GetBytes((uint)block.Comment.Length));
-
-            // Comment
-            stream.Write(Encoding.UTF8.GetBytes(block.Comment));
-
-            // Comment length
-            stream.Write(BitConverter.GetBytes((ulong)block.Data.LongLength));
-
-            // Comment
-            stream.Write(block.Data);
+            stream.Flush();
         }
 
         /// <summary>

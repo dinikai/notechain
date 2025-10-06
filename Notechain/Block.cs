@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -7,7 +8,7 @@ namespace Notechain
     /// <summary>
     /// Repsesents block in chain that contains data.
     /// </summary>
-    internal class Block
+    public class Block
     {
         /// <summary>
         /// Unique block ID.
@@ -35,8 +36,8 @@ namespace Notechain
         public byte[] Hash { get; set; }
 
         /// <summary>
-        /// Previous block in chain.
-        /// <c>null</c> if current block is genesis block.
+        /// Previous block in chain;
+        /// returns <see langword="null"></see>, if current block is a genesis block.
         /// </summary>
         public Block? Previous { get; set; }
 
@@ -48,9 +49,30 @@ namespace Notechain
         /// <summary>
         /// Nonce value that need to be changed to produce new hash.
         /// </summary>
-        public long Nonce { get; set; }
+        public ulong Nonce { get; set; }
 
-        public Block(Guid id, uint height, byte[] data, string comment, byte[] hash, DateTime timestamp, long nonce)
+        /// <summary>
+        /// Returns data as decoded UTF-8 string.
+        /// </summary>
+        public string TextData => Encoding.UTF8.GetString(Data);
+
+        /// <summary>
+        /// Returns <see langword="true"></see> if <see cref="Height"/> is zero.
+        /// </summary>
+        public bool IsGenesis => Height == 0;
+
+        /// <summary>
+        /// Verifies the integrity of the block by recalculating its hash and comparing it to the stored hash.
+        /// </summary>
+        /// <returns><see langword="true"></see> if the block's hash is valid and matches the computed hash; otherwise, <see langword="false"></see>.</returns>
+        public bool IsValid => CheckForValidity();
+
+        /// <summary>
+        /// Determines block generation rate recalculation interval in hashing iterations.
+        /// </summary>
+        private static readonly ulong rateCalculationInterval = 200_000;
+
+        public Block(Guid id, uint height, byte[] data, string comment, byte[] hash, DateTime timestamp, ulong nonce)
         {
             Id = id;
             Height = height;
@@ -65,11 +87,10 @@ namespace Notechain
         /// Asynchronously generates a new block with the specified data and comment,
         /// performing a proof-of-work hash calculation to ensure the block's validity.
         /// </summary>
-        /// <param name="data">The data to be stored in the block.</param>
-        /// <param name="comment">A human-readable comment or description associated with the block.</param>
-        /// <param name="previousBlock">The previous block in the chain, or <c>null</c> if this is the genesis block.</param>
+        /// <param name="entry">The data to be stored in the block.</param>
+        /// <param name="previousBlock">The previous block in the chain, or <see langword="null"></see> if this is the genesis block.</param>
         /// <returns>A new generated <see cref="Block"/>.</returns>
-        public static async Task<Block> GenerateNew(byte[] data, string comment, Block? previousBlock)
+        public static Block? GenerateNew(Entry entry, Block? previousBlock)
         {
             uint height = 0;
             if (previousBlock != null)
@@ -78,8 +99,8 @@ namespace Notechain
             var block = new Block(
                 id: Guid.NewGuid(),
                 height: height,
-                data: data,
-                comment: comment,
+                data: entry.Data,
+                comment: entry.Comment,
                 hash: [],
                 timestamp: DateTime.Now,
                 nonce: 0
@@ -88,19 +109,66 @@ namespace Notechain
                 Previous = previousBlock
             };
 
-            var sha256 = SHA256.Create();
-            byte[] hash = [];
-            long nonce = long.MinValue;
-            do
+            ulong iterations = 0;
+
+            int tasksCount = Environment.ProcessorCount;
+            ulong rangePerThread = ulong.MaxValue / (ulong)tasksCount; // Nonce range per task.
+            var tasks = new Task[tasksCount];
+
+            var rateStopwatch = Stopwatch.StartNew();
+
+            for (int i = 0; i < tasksCount; i++)
             {
-                if (nonce == long.MaxValue)
-                    break;
+                int j = i;
+                tasks[i] = Task.Run(() =>
+                {
+                    Span<byte> hash = stackalloc byte[256];
 
-                hash = await block.GetHashAsync(++nonce, sha256);
-            } while (!IsHashValid(hash));
+                    ulong localNonce = (ulong)j * rangePerThread;
+                    ulong endNonce = localNonce + rangePerThread;
 
-            block.Hash = hash;
-            block.Nonce = nonce;
+                    while (localNonce < endNonce)
+                    {
+                        // Return null if cancellation was requested.
+                        if (entry.GenerationCancellationRequested)
+                            return null;
+
+                        // Return null if block was generated by other task.
+                        if (block.Hash.Length != 0)
+                            return block;
+
+                        // Recalculate generation rate.
+                        if (iterations % rateCalculationInterval == 0 && iterations != 0)
+                        {
+                            entry.HashesPerSecond = rateCalculationInterval / rateStopwatch.Elapsed.TotalSeconds;
+                            rateStopwatch.Restart();
+                        }
+
+                        hash = block.GetHash(++localNonce);
+                        if (IsHashValid(hash))
+                        {
+                            // If nonce value is correct, then
+                            // lock block object, set its properties and return it.
+                            lock (block)
+                            {
+                                block.Hash = hash.ToArray();
+                                block.Nonce = localNonce;
+
+                                return block;
+                            }
+                        }
+
+                        iterations++;
+                    }
+
+                    return null; // Return null if hash in given nonce range wasn't found.
+                });
+            }
+
+            Task.WaitAll(tasks);
+
+            if (block.Hash.Length == 0)
+                return null;
 
             return block;
         }
@@ -109,8 +177,8 @@ namespace Notechain
         /// Reads next block from stream.
         /// </summary>
         /// <param name="stream">Stream to read from.</param>
-        /// <param name="previousBlock">Previous block. <c>null</c> if no blocks was read.</param>
-        /// <returns></returns>
+        /// <param name="previousBlock">Previous block; pass <see langword="null"></see> if current block is genesis.</param>
+        /// <returns>Read block; <see langword="null"></see> if no blocks was read.</returns>
         public static Block? FromStream(Stream stream, Block? previousBlock)
         {
             // ID
@@ -143,7 +211,7 @@ namespace Notechain
             // Nonce
             buffer = new byte[8];
             stream.Read(buffer);
-            long nonce = BitConverter.ToInt64(buffer);
+            ulong nonce = BitConverter.ToUInt64(buffer);
 
             // Comment length
             buffer = new byte[4];
@@ -179,14 +247,55 @@ namespace Notechain
         }
 
         /// <summary>
-        /// Returns <c>true</c> if <paramref name="hash"/> less than target, otherwise <c>false</c>.
+        /// Writes binary-serialized block data to <paramref name="stream"/>.
         /// </summary>
-        public static bool IsHashValid(byte[] hash)
+        /// <param name="stream">Stream to write.</param>
+        public void WriteBlockToStream(Stream stream)
         {
-            var target = GetHashTarget(16);
-            
-            byte[] positiveHash = new byte[hash.Length + 1];
-            Array.Copy(hash, positiveHash, hash.Length);
+            // ID
+            stream.Write(Id.ToByteArray());
+
+            // Height
+            stream.Write(BitConverter.GetBytes(Height));
+
+            // Hash
+            stream.Write(Hash);
+
+            // Previous hash
+            byte[] previousHash = Enumerable.Repeat<byte>(0, 32).ToArray();
+            if (Previous != null)
+                previousHash = Previous.Hash;
+            stream.Write(previousHash);
+
+            // Timestamp
+            stream.Write(BitConverter.GetBytes(Timestamp.ToBinary()));
+
+            // Nonce
+            stream.Write(BitConverter.GetBytes(Nonce));
+
+            // Comment length
+            byte[] commentBytes = Encoding.UTF8.GetBytes(Comment);
+            stream.Write(BitConverter.GetBytes((uint)commentBytes.Length));
+
+            // Comment
+            stream.Write(commentBytes);
+
+            // Comment length
+            stream.Write(BitConverter.GetBytes((ulong)Data.LongLength));
+
+            // Comment
+            stream.Write(Data);
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"></see> if <paramref name="hash"/> less than target, otherwise <see langword="false"></see>.
+        /// </summary>
+        public static bool IsHashValid(ReadOnlySpan<byte> hash)
+        {
+            var target = GetHashTarget(26);
+
+            Span<byte> positiveHash = stackalloc byte[hash.Length + 1];
+            hash.CopyTo(positiveHash);
 
             var hashInt = new BigInteger(positiveHash);
             return hashInt < target;
@@ -206,10 +315,10 @@ namespace Notechain
         /// <summary>
         /// Verifies the integrity of the block by recalculating its hash and comparing it to the stored hash.
         /// </summary>
-        /// <returns><c>true</c> if the block's hash is valid and matches the computed hash; otherwise, <c>false</c>.</returns>
+        /// <returns><see langword="true"></see> if the block's hash is valid and matches the computed hash; otherwise, <see langword="false"></see>.</returns>
         public bool CheckForValidity()
         {
-            byte[] feed = GetHashFeed();
+            Span<byte> feed = GetHashFeed();
             var hash = SHA256.HashData(feed);
 
             return hash.SequenceEqual(Hash);
@@ -218,36 +327,21 @@ namespace Notechain
         /// <summary>
         /// Computes and returns block summary hash with specified <paramref name="nonce"/> value.
         /// </summary>
-        private byte[] GetHash(long nonce)
+        private Span<byte> GetHash(ulong nonce)
         {
-            byte[] feed = GetHashFeed(nonce);
+            Span<byte> feed = GetHashFeed(nonce);
             return SHA256.HashData(feed);
         }
 
         /// <summary>
         /// Computes and returns block summary hash.
         /// </summary>
-        public byte[] GetHash() => GetHash(Nonce);
-
-        /// <summary>
-        /// Computes and returns block summary hash with specified <paramref name="nonce"/> value.
-        /// </summary>
-        public async Task<byte[]> GetHashAsync(long nonce, SHA256 sha256)
-        {
-            byte[] feed = GetHashFeed(nonce);
-            using var ms = new MemoryStream(feed);
-            return await sha256.ComputeHashAsync(ms);
-        }
-
-        /// <summary>
-        /// Computes and returns block summary hash.
-        /// </summary>
-        public async Task<byte[]> GetHashAsync(SHA256 sha256) => await GetHashAsync(Nonce, sha256);
+        public Span<byte> GetHash() => GetHash(Nonce);
 
         /// <summary>
         /// Returns the concatenated block data for hashing with specified <paramref name="nonce"/> value.
         /// </summary>
-        private byte[] GetHashFeed(long nonce)
+        private Span<byte> GetHashFeed(ulong nonce)
         {
             var bytes = new List<byte>();
 
@@ -258,7 +352,7 @@ namespace Notechain
             bytes.AddRange(BitConverter.GetBytes(Height));
 
             // Previous hash
-            byte[] previousHash = Enumerable.Repeat<byte>(0, 32).ToArray();
+            Span<byte> previousHash = Enumerable.Repeat<byte>(0, 32).ToArray();
             if (Previous != null)
                 previousHash = Previous.Hash;
             bytes.AddRange(previousHash);
@@ -281,6 +375,6 @@ namespace Notechain
         /// <summary>
         /// Returns the concatenated block data for hashing.
         /// </summary>
-        public byte[] GetHashFeed() => GetHashFeed(Nonce);
+        public Span<byte> GetHashFeed() => GetHashFeed(Nonce);
     }
 }

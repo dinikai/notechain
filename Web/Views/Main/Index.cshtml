@@ -1,0 +1,65 @@
+﻿<div class="box">
+    <div class="box-header notes-box-header">
+        <input type="text" id="filterInput" placeholder="Filter notes..." />
+        <div>
+            <a class="button button-good" href="/add">
+                <span class="icon-quill"></span>
+                Add note
+            </a>
+        </div>
+    </div>
+
+    <div class="notes-box-list" id="notesList"></div>
+</div>
+
+<br />
+
+<div class="box">
+    <div class="box-header">
+        <span class="icon-cogs"></span>
+        Queue
+    </div>
+
+    <div class="notes-box-list" id="queue"></div>
+</div>
+
+<div class="modal" id="removeQueueEntryModal">
+    <div class="modal-title">Cancel this task</div>
+    <div class="modal-content">
+        Are you sure you want to cancel this task?
+    </div>
+    <div class="modal-buttons">
+        <button class="modal-close-button">Close</button>
+        <button class="button-danger" data-action="cancel">Cancel</button>
+    </div>
+</div>
+
+<template id="noteTemplate">
+    <a class="box-item list-note">
+        <div class="list-note-height" title="Note height"></div>
+        <div class="list-note-preview"></div>
+        <div class="list-note-actions"></div>
+    </a>
+</template>
+
+<template id="queueEntryTemplate">
+    <div class="box-item queue-entry">
+        <div class="queue-entry-timestamp" title="Task creation date"></div>
+        <div class="queue-entry-preview"></div>
+        <div class="queue-entry-rate" title="Hashrate"></div>
+        <div class="queue-entry-elapsed" title="Elapsed time"></div>
+        <div class="queue-entry-actions">
+            <span class="queue-entry-remove icon-cancel text-button" title="Cancel this task"></span>
+        </div>
+    </div>
+</template>
+
+<template id="queueStub">
+    <div class="box-item">
+        No notes are being processed now.
+    </div>
+</template>
+
+@section Scripts {
+    <script type="module" src="~/js/index.js"></script>
+}
