@@ -58,11 +58,26 @@ namespace Web
         /// </summary>
         public void RemoveEntryFromQueue(Guid id)
         {
-            IEnumerable<Entry> query = EntriesQueue;
+            IEnumerable<Entry> queue = EntriesQueue;
             if (ProcessingEntry != null)
-                query = EntriesQueue.Prepend(ProcessingEntry);
+                queue = EntriesQueue.Prepend(ProcessingEntry);
 
-            query.FirstOrDefault(e => e.Id == id)?.CancelGeneration();
+            queue.FirstOrDefault(e => e.Id == id)?.CancelGeneration();
+        }
+
+        /// <summary>
+        /// Prevents all blocks generation and stops current block generation.
+        /// </summary>
+        public void ClearQueue()
+        {
+            IEnumerable<Entry> queue = EntriesQueue;
+            if (ProcessingEntry != null)
+                queue = EntriesQueue.Prepend(ProcessingEntry);
+
+            foreach (var entry in queue)
+            {
+                entry.CancelGeneration();
+            }
         }
 
         private void ProcessQueue()

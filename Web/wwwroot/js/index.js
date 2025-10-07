@@ -75,6 +75,8 @@ function updateQueueDom(queue) {
         i++;
     });
 
+    clearQueueButton.disabled = queue.length == 0;
+
     if (queue.length == 0) {
         let stub = domHelper.unpackTemplate(document.querySelector('#queueStub'));
         queueElement.appendChild(stub);
@@ -142,17 +144,28 @@ async function filterInputHandler() {
     }
 }
 
-// Add filter input handler.
-let filterInput = document.querySelector('#filterInput');
-filterInput.addEventListener('input', filterInputHandler);
-
 // Init modal windows.
 const queueEntryRemoveModal = new modal.Modal('removeQueueEntryModal');
-queueEntryRemoveModal.mapAction('cancel', async (params) => {
+queueEntryRemoveModal.mapAction('cancel', async params => {
     queueEntryRemoveModal.hide();
     await api.removeEntryFromQueue(params.id);
     updateQueueDom(await api.getQueue());
 });
+
+const queueClearModal = new modal.Modal('clearQueueModal');
+queueClearModal.mapAction('clear', async () => {
+    queueClearModal.hide();
+    await api.clearQueue();
+    updateQueueDom(await api.getQueue());
+});
+
+// Add filter input handler.
+let filterInput = document.querySelector('#filterInput');
+filterInput.addEventListener('input', filterInputHandler);
+
+// Add a handler for the clear queue button.
+let clearQueueButton = document.querySelector('#clearQueueButton');
+clearQueueButton.addEventListener('click', () => queueClearModal.show());
 
 // Update notes and queue.
 updateEntriesDom(await api.getAllEntries());

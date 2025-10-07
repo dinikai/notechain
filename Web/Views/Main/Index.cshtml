@@ -15,9 +15,15 @@
 <br />
 
 <div class="box">
-    <div class="box-header">
-        <span class="icon-cogs"></span>
-        Queue
+    <div class="box-header queue-box-header">
+        <div class="queue-box-header-title">
+            <span class="icon-cogs"></span>
+            Queue
+        </div>
+        <button class="button-danger" id="clearQueueButton" disabled title="Remove all tasks from the queue">
+            <span class="icon-cancel"></span>
+            Clear
+        </button>
     </div>
 
     <div class="notes-box-list" id="queue"></div>
@@ -31,6 +37,17 @@
     <div class="modal-buttons">
         <button class="modal-close-button">Close</button>
         <button class="button-danger" data-action="cancel">Cancel</button>
+    </div>
+</div>
+
+<div class="modal" id="clearQueueModal">
+    <div class="modal-title">Clear the queue</div>
+    <div class="modal-content">
+        Are you sure you want to remove all tasks from the queue?
+    </div>
+    <div class="modal-buttons">
+        <button class="modal-close-button">Close</button>
+        <button class="button-danger" data-action="clear">Clear</button>
     </div>
 </div>
 

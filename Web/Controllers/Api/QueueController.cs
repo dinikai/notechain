@@ -46,5 +46,12 @@ namespace Web.Controllers.Api
             blockChainService.RemoveEntryFromQueue(id);
             return Ok();
         }
+
+        [HttpPost]
+        public IActionResult Clear()
+        {
+            blockChainService.ClearQueue();
+            return Ok();
+        }
     }
 }

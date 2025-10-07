@@ -156,6 +156,17 @@ footer {
 
 }
 
+.queue-box-header {
+    display: grid;
+    grid-template-columns: 1fr max-content;
+}
+
+.queue-box-header-title {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
 .queue-entry {
     display: grid;
     grid-template-columns: 100px 1fr max-content max-content max-content;
@@ -232,7 +243,10 @@ button, .button {
     color: var(--color);
     text-decoration: none;
     cursor: default;
-    display: inline-block;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
 }
 
 button:hover, .button:hover {
@@ -284,9 +298,9 @@ button:disabled, .button:disabled {
 }
 
 .button-danger:disabled {
-    color: #74956d;
-    background: #bed9c1;
-    border-color: rgb(166, 204, 165);
+    color: #956d6d;
+    background: #d9bebe;
+    border-color: rgb(206, 179, 179);
 }
 
 input, textarea {

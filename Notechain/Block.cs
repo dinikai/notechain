@@ -300,7 +300,7 @@ namespace Notechain
         /// </summary>
         public static bool IsHashValid(ReadOnlySpan<byte> hash)
         {
-            var target = GetHashTarget(26);
+            var target = GetHashTarget(32);
 
             Span<byte> positiveHash = stackalloc byte[hash.Length + 1];
             hash.CopyTo(positiveHash);

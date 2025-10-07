@@ -41,6 +41,12 @@ export async function removeEntryFromQueue(id) {
     });
 }
 
+export async function clearQueue() {
+    await fetch('api/queue/clear', {
+        method: 'POST'
+    });
+}
+
 async function fetchJson(url, method, params) {
     let result = await fetch(
         url + '?' + new URLSearchParams(params),
