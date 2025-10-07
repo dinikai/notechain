@@ -17,6 +17,8 @@
         /// </summary>
         public DateTime Timestamp { get; } = DateTime.Now;
 
+        public int Difficulty { get; }
+
         public Guid Id { get; } = Guid.NewGuid();
 
         public double HashesPerSecond { get; set; }
@@ -25,10 +27,11 @@
 
         private bool generationCancellationRequested;
 
-        public Entry(byte[] data, string comment)
+        public Entry(byte[] data, string comment, int difficulty)
         {
             Data = data;
             Comment = comment;
+            Difficulty = difficulty;
         }
 
         public void CancelGeneration() => generationCancellationRequested = true;

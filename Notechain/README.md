@@ -18,6 +18,7 @@ Header length is *256 bytes*. If real length is less than *256 bytes* then the r
 | Byte[]   | 32 bytes | Previous block hash |
 | DateTime |  8 bytes | Timestamp           |
 | Int64    |  8 bytes | Nonce value         |
+| Int32    |  4 bytes | Difficulty          |
 | UInt32   |  4 bytes | Comment length      |
 | Byte[]   |     -    | Comment             |
 | UInt64   |  8 bytes | Data length         |
@@ -33,6 +34,7 @@ sha256
   [Previous hash]
   [Timestamp]
   [Nonce]
+  [Difficulty]
   [Comment]
   [Data]
 )
