@@ -52,6 +52,10 @@ namespace Web
                 Task.Run(ProcessQueue);
         }
 
+        /// <summary>
+        /// Prevents block generation associated with entry with ID <paramref name="id"/>.
+        /// Cancels the current generation.
+        /// </summary>
         public void RemoveEntryFromQueue(Guid id)
         {
             IEnumerable<Entry> query = EntriesQueue;
