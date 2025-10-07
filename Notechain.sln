@@ -10,6 +10,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web", "Web\Web.csproj", "{B
 		{ADE50201-9EFB-46BA-A654-D2CACE0AB84B} = {ADE50201-9EFB-46BA-A654-D2CACE0AB84B}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{C75102F2-1C99-4063-B3B4-8E11AD862A9B}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+		README.ru.md = README.ru.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
