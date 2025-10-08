@@ -9,6 +9,11 @@ This repository contains a simple core for working with a chain of records, alon
 > This project is a personal practice experiment in building relatively complex systems.
 > It contains several serious issues and should not be used for real data storage.
 
+<div align="center">
+  <img src="screenshots/s1.png" width="48%" style="vertical-align: middle;">
+  <img src="screenshots/s2.png" width="48%" style="vertical-align: middle;">
+</div>
+
 ## Concept
 Notechain is an experimental platform for storing data as an immutable chain of records.
 The main idea is to ensure data immutability without encryption or external services,

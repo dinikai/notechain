@@ -35,7 +35,7 @@ namespace Web.Controllers.Api
         public IActionResult Add(string data, string comment)
         {
             byte[] byteData = Encoding.UTF8.GetBytes(data);
-            blockChainService.AddEntryToQueue(new Entry(byteData, comment, 28));
+            blockChainService.AddEntryToQueue(new Entry(byteData, comment, 26));
 
             return Ok();
         }
