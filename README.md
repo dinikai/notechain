@@ -1,4 +1,4 @@
-*README íà ðóññêîì ÿçûêå*: [[README.ru.md](README.ru.md)]
+*README Ð½Ð° Ñ€ÑƒÑÑÐºÐ¾Ð¼ ÑÐ·Ñ‹ÐºÐµ: [[README.ru.md](README.ru.md)]
 
 # Notechain
 > **Notechain**: a blockchain-based diary using a proof-of-work system.
@@ -20,14 +20,14 @@ The main idea is to ensure data immutability without encryption or external serv
 relying instead on the computational cost of modifying the chain.
 
 The system achieves this by implementing a proof-of-work (PoW) mechanism.
-To add a new block (record) to the chain, a computationally expensive operation must be performed —
-finding a hash that meets specific conditions — the hash must contain a certain number of consecutive zero bits.
+To add a new block (record) to the chain, a computationally expensive operation must be performed â€”
+finding a hash that meets specific conditions â€” the hash must contain a certain number of consecutive zero bits.
 
-Verifying an existing block, on the other hand, requires very little computational effort —
+Verifying an existing block, on the other hand, requires very little computational effort â€”
 anyone can confirm its validity without redoing the entire calculation.
 
 The core of block generation lies in finding a Nonce value (a one-time number) such that
-the result of computing the block’s SHA-256 hash meets the defined difficulty target.
+the result of computing the blockâ€™s SHA-256 hash meets the defined difficulty target.
 The algorithm iterates through possible Nonce values until a valid one is found.
 
 ### Block Hash Generation
